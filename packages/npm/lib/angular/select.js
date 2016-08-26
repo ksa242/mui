@@ -237,8 +237,11 @@ _angular2.default.module(moduleName, []).directive('muiSelect', ['$timeout', fun
             jqLite.on(window, 'resize', closeMenuFn);
           });
         } else {
-          // focus select element
-          selectEl[0].focus();
+          // re-focus if click not on control element
+          var activeElement = document.activeElement;
+          if (!activeElement || 'form' in activeElement === false) {
+            selectEl[0].focus();
+          }
 
           // disable scroll lock
           util.disableScrollLock(true);

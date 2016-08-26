@@ -326,12 +326,16 @@ Menu.prototype.selectCurrent = function() {
 /**
  * Destroy menu and detach event handlers
  */
-Menu.prototype.destroy = function() {
+Menu.prototype.destroy = function(ev) {
   // remove element and focus element
   var parentNode = this.menuEl.parentNode;
   if (parentNode) parentNode.removeChild(this.menuEl);
 
-  this.selectEl.focus();
+  // re-focus select element if click not on control element
+  var activeElement = doc.activeElement;
+  if (!activeElement || 'form' in activeElement === false) {
+    this.selectEl.focus();
+  }
 
   // remove scroll lock
   util.disableScrollLock(true);

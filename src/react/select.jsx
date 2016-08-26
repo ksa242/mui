@@ -188,8 +188,11 @@ class Select extends React.Component {
     // re-draw
     this.setState({showMenu: false});
 
-    // refocus
-    this.refs.selectEl.focus();
+    // re-focus if click not on control element
+    let activeElement = document.activeElement;
+    if (!activeElement || 'form' in activeElement === false) {
+      this.refs.selectEl.focus();
+    }
   }
 
   onMenuChange(value) {
