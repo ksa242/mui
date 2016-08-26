@@ -10,7 +10,8 @@ var util = require('./lib/util'),
     jqLite = require('./lib/jqLite'),
     overlayId = 'mui-overlay',
     bodyClass = 'mui--overflow-hidden',
-    iosRegex = /(iPad|iPhone|iPod)/g;
+    iosRegex = /(iPad|iPhone|iPod)/g,
+    activeElement;
 
 
 /**
@@ -44,7 +45,7 @@ function overlayFn(action) {
     
     // execute method
     overlayEl = overlayOn(options, childElement);
-    
+
   } else if (action === 'off') {
     overlayEl = overlayOff();
 
@@ -65,15 +66,15 @@ function overlayFn(action) {
 function overlayOn(options, childElement) {
   var bodyEl = document.body,
       overlayEl = document.getElementById(overlayId);
-    
+
   // add overlay
   util.enableScrollLock();
-  //jqLite.addClass(bodyEl, bodyClass);
 
   if (!overlayEl) {
     // create overlayEl
     overlayEl = document.createElement('div');
     overlayEl.setAttribute('id', overlayId);
+    overlayEl.setAttribute('tabindex', '-1');
     
     // add child element
     if (childElement) overlayEl.appendChild(childElement);
@@ -102,6 +103,10 @@ function overlayOn(options, childElement) {
 
   // attach options
   overlayEl.muiOptions = options;
+
+  // cache active element and focus overlay
+  activeElement = document.activeElement;
+  overlayEl.focus();
 
   return overlayEl;
 }
@@ -132,6 +137,12 @@ function overlayOff() {
 
   // remove keyup handler
   removeKeyupHandler();
+
+  // re-focus focused element
+  if (activeElement) {
+    activeElement.focus();
+    activeElement = null;
+  }
 
   // execute callback
   if (callbackFn) callbackFn();
