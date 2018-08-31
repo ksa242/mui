@@ -85,12 +85,18 @@ function toggleDropdown(toggleEl) {
 
   // method to open dropdown
   function openDropdownFn() {
-    // position menu element below toggle button
-    var wrapperRect = wrapperEl.getBoundingClientRect(),
-        toggleRect = toggleEl.getBoundingClientRect();
-
-    var top = toggleRect.top - wrapperRect.top + toggleRect.height;
-    jqLite.css(menuEl, 'top', top + 'px');
+    var toggleRect = toggleEl.getBoundingClientRect();
+    if (toggleRect.top < 0.62 * window.innerHeight) {
+      // the toggle button is in the upper 62% of the screen,
+      // dropdown opens downward.
+      jqLite.css(menuEl, 'top', '0');
+      jqLite.css(menuEl, 'bottom', 'auto');
+    } else {
+      // the toggle button is in the lower 38% of the screen,
+      // dropdown opens upward.
+      jqLite.css(menuEl, 'top', 'auto');
+      jqLite.css(menuEl, 'bottom', toggleRect.height + 'px');
+    }
 
     // add open class to wrapper
     jqLite.addClass(menuEl, openClass);
