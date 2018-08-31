@@ -2,7 +2,7 @@
  * MUI Select Component
  */
 
-$xFormLabelLineHeight: floor($mui-label-font-size * 1.25);
+$xFormLabelLineHeight: $mui-label-font-size * 1.25;
 
 
 .mui-select {
@@ -15,7 +15,7 @@ $xFormLabelLineHeight: floor($mui-label-font-size * 1.25);
     outline: 0;
 
     > select {
-      height: $mui-input-height + 1px;
+      height: calc(#{$mui-input-height} + 1px);
       margin-bottom: -1px;
       border-color: $mui-input-border-color-focus;
       border-width: 2px;
@@ -23,8 +23,6 @@ $xFormLabelLineHeight: floor($mui-label-font-size * 1.25);
   }
 
   > select {
-    @include mui-node-inserted();
-
     // Layout
     display: block;
     height: $mui-input-height;
@@ -48,7 +46,10 @@ $xFormLabelLineHeight: floor($mui-label-font-size * 1.25);
     // Typography
     color: $mui-input-font-color;
     font-size: $mui-input-font-size;
-    padding: 0 25px 0 0;
+    font-family: inherit;
+    line-height: inherit;
+
+    padding: 0 mui-rem(25px) 0 0;
 
     &::-ms-expand {
       display: none;  // For IE
@@ -56,7 +57,7 @@ $xFormLabelLineHeight: floor($mui-label-font-size * 1.25);
 
     &:focus {
       outline: 0;
-      height: $mui-input-height + 1px;
+      height: calc(#{$mui-input-height} + 1px);
       margin-bottom: -1px;
       border-color: $mui-input-border-color-focus;
       border-width: 2px;
@@ -67,6 +68,23 @@ $xFormLabelLineHeight: floor($mui-label-font-size * 1.25);
       cursor: $mui-cursor-disabled;
       background-color: $mui-input-bg-color-disabled;
       opacity: 1;  // iOS fix for unreadable disabled content
+    }
+
+    // disable focus ring in Firefox
+    &:-moz-focusring {
+      color: transparent;
+      text-shadow: 0 0 0 #000;
+    }
+
+    // prevent IE background color
+    &:focus::-ms-value {
+      background: none;
+      color: $mui-text-dark;
+    }
+
+    // placeholder
+    &.mui--text-placeholder {
+      color: $mui-input-placeholder-color;
     }
   }
 
@@ -90,11 +108,14 @@ $xFormLabelLineHeight: floor($mui-label-font-size * 1.25);
   // Display
   min-width: 100%;
   overflow-y: auto;
-  padding: 8px 0;
+  padding: mui-rem(8px) 0;
+
+  // box-sizing
+  box-sizing: border-box;
 
   // Other
-  background-color: mui-color('white');
-  font-size: $mui-input-font-size;
+  background-color: $mui-select-menu-bg-color;
+  font-size: $mui-select-menu-font-size;
 
   // IE10+ bugfix
   @media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
@@ -102,15 +123,21 @@ $xFormLabelLineHeight: floor($mui-label-font-size * 1.25);
     border-top: 1px solid mui-color('black-alpha-12');
   }
 
+  // Edge bugfix
+  @supports (-ms-ime-align:auto) {
+    border-left: 1px solid mui-color('black-alpha-12');
+    border-top: 1px solid mui-color('black-alpha-12');
+  }
+
   > div {
-    padding: 0 22px;
-    height: $mui-input-font-size + 26px;
-    line-height: $mui-input-font-size + 26px;
+    padding: 0 mui-rem(22px);
+    height: $mui-select-menu-item-height;
+    line-height: $mui-select-menu-item-height;
     cursor: pointer;
     white-space: nowrap;
 
     &.mui--is-selected {
-      background-color: mui-color('grey', '200');
+      background-color: $mui-select-menu-item-bg-color-selected;
     }
 
     &.mui--is-disabled {
@@ -119,7 +146,7 @@ $xFormLabelLineHeight: floor($mui-label-font-size * 1.25);
     }
 
     &:not(.mui-optgroup__label):not(.mui--is-disabled):hover {
-      background-color: mui-color('grey', '300');
+      background-color: $mui-select-menu-item-bg-color-hover;
     }
   }
 }

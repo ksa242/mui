@@ -93,11 +93,13 @@ Read more: https://www.muicss.com/docs/v1/react/buttons
 import Checkbox from 'muicss/lib/react/checkbox';
 
 <Checkbox />
-  * {String} label
-  * {String} value
   * {Boolean} checked
   * {Boolean} defaultChecked
+  * {String} defaultValue
   * {Boolean} disabled=false|true
+  * {String} label
+  * {String} name
+  * {String} value
 ```
 
 Read more: https://www.muicss.com/docs/v1/react/forms
@@ -208,10 +210,14 @@ import Input from 'muicss/lib/react/input';
 
 <Input />
   * {String} defaultValue
-  * {String} hint
-  * {String} value
+  * {Boolean} floatingLabel
+  * {String} placeholder
+  * {Boolean} invalid
+  * {String} label
+  * {String} name
+  * {Boolean} required
   * {String} type=text|email|url|tel|password
-  * {Boolean} autoFocus
+  * {String} value
   * {Function} onChange
 ```
 
@@ -251,15 +257,14 @@ import Select from 'muicss/lib/react/select';
 
 <Select />
   * {String} defaultValue
-  * {String} label
-  * {String} name
-  * {String} value
-  * {Boolean} autoFocus=false|true
   * {Boolean} disabled=false|true
-  * {Boolean} multiple=false|true
+  * {String} name
+  * {String} label
+  * {String} placeholder
   * {Boolean} readOnly=false|true
   * {Boolean} required=false|true
   * {Boolean} useDefault=false|true
+  * {String} value
   * {Function} onChange
 ```
 
@@ -285,7 +290,8 @@ Read more: https://www.muicss.com/docs/v1/react/forms
 import Tabs from 'muicss/lib/react/tabs';
 
 <Tabs />
-  * {Integer} initialSelectedIndex=0
+  * {Integer} defaultSelectedIndex=0
+  * {Integer} selectedIndex
   * {Boolean} justified=false|true
   * {Function} onChange
 ```
@@ -312,10 +318,14 @@ import Textarea from 'muicss/lib/react/textarea';
 
 <Textarea />
   * {String} defaultValue
-  * {String} hint
+  * {Boolean} floatingLabel
+  * {String} placeholder
+  * {Boolean} invalid
+  * {String} label
+  * {String} name
+  * {Boolean} required
+  * {Number} rows
   * {String} value
-  * {Integer} rows
-  * {Boolean} autoFocus
   * {Function} onChange
 ```
 
@@ -436,6 +446,10 @@ muicss
 │   ├── css
 │   │   ├── mui.css
 │   │   ├── mui.min.css
+│   │   ├── mui-noglobals.css
+│   │   ├── mui-noglobals.min.css
+│   │   ├── mui-noglobals-rtl.css
+│   │   ├── mui-noglobals-rtl.min.css
 │   │   ├── mui-rtl.css
 │   │   └── mui-rtl.min.css
 │   ├── email
@@ -445,9 +459,17 @@ muicss
 │   │   └── mui-email-styletag-rtl.css
 │   ├── extra
 │   │   ├── mui-angular-combined.js
+│   │   ├── mui-angular-combined.min.js
 │   │   ├── mui-colors.css
+│   │   ├── mui-colors.min.css
 │   │   ├── mui-combined.js
-│   │   └── mui-react-combined.js
+│   │   ├── mui-combined.min.js
+│   │   ├── mui-noglobals.css
+│   │   ├── mui-noglobals.min.css
+│   │   ├── mui-noglobals-rtl.css
+│   │   ├── mui-noglobals-rtl.min.css
+│   │   ├── mui-react-combined.js
+│   │   └── mui-react-combined.min.js
 │   ├── js
 │   │   ├── mui.js
 │   │   └── mui.min.js
@@ -517,6 +539,7 @@ muicss
 │       │   ├── _divider.scss
 │       │   ├── _dropdown.scss
 │       │   ├── _form.scss
+│       │   ├── _globals.scss
 │       │   ├── _grid.scss
 │       │   ├── _helpers.scss
 │       │   ├── mixins
@@ -528,7 +551,6 @@ muicss
 │       │   ├── _mixins.scss
 │       │   ├── _overlay.scss
 │       │   ├── _panel.scss
-│       │   ├── _reboot.scss
 │       │   ├── _ripple.scss
 │       │   ├── _select.scss
 │       │   ├── _table.scss
@@ -537,8 +559,8 @@ muicss
 │       │   ├── _typography.scss
 │       │   └── _variables.scss
 │       ├── mui-colors.scss
-│       ├── mui.scss
-│       └── normalize-3.0.3.scss
+│       ├── mui-noglobals.scss
+│       └── mui.scss
 ├── LICENSE.txt
 ├── package.json
 ├── react.js

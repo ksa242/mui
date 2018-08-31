@@ -19,20 +19,18 @@ var util = babelHelpers.interopRequireWildcard(_util);
 
 
 var moduleName = 'mui.button',
-    rippleClass = 'mui-ripple-effect',
     supportsTouch = 'ontouchstart' in document.documentElement,
     mouseDownEvents = supportsTouch ? 'touchstart' : 'mousedown',
-    mouseUpEvents = supportsTouch ? 'touchend' : 'mouseup mouseleave',
-    animationDuration = 600; /**
-                              * MUI Angular Button Component
-                              * @module angular/button
-                              */
+    mouseUpEvents = supportsTouch ? 'touchend' : 'mouseup mouseleave'; /**
+                                                                        * MUI Angular Button Component
+                                                                        * @module angular/button
+                                                                        */
 
 _angular2.default.module(moduleName, []).directive('muiButton', function () {
   return {
     restrict: 'AE',
     replace: true,
-    template: '<button class="mui-btn" mui-ripple ng-transclude></button>',
+    template: '<button class="mui-btn" mui-ripple>' + '<ng-transclude></ng-transclude>' + '<span class="mui-btn__ripple-container">' + '<span class="mui-ripple"></span>' + '</span>' + '</button>',
     transclude: true,
     link: function link(scope, element, attrs) {
       var isUndef = _angular2.default.isUndefined,
@@ -58,7 +56,12 @@ _angular2.default.module(moduleName, []).directive('muiButton', function () {
   return {
     restrict: 'A',
     link: function link(scope, element, attrs) {
-      // add mousedown event handler
+      var buttonEl = element[0];
+
+      // cache reference to ripple element
+      buttonEl._rippleEl = buttonEl.querySelector('.mui-ripple');
+
+      // add mousedown and mouseup event ripple effect handlers
       element.on(mouseDownEvents, mouseDownHandler);
     }
   };
@@ -69,47 +72,43 @@ _angular2.default.module(moduleName, []).directive('muiButton', function () {
  * @param {Event} ev - The DOM event
  */
 function mouseDownHandler(ev) {
-  var element = _angular2.default.element(this);
+  var buttonEl = this,
+      rippleEl = buttonEl._rippleEl;
 
   // exit if disabled
-  if (element.prop('disabled')) return;
+  if (buttonEl.disabled) return;
 
-  // add mouseup event handler once
-  if (!this.muiMouseUp) {
-    element.on(mouseUpEvents, mouseUpHandler);
-    this.muiMouseUp = true;
+  // add mouseup handler on first-click
+  if (!rippleEl._init) {
+    jqLite.on(buttonEl, mouseUpEvents, mouseUpHandler);
+    rippleEl._init = true;
   }
 
   // get (x, y) position of click
-  var offset = jqLite.offset(this),
+  var offset = jqLite.offset(buttonEl),
       clickEv = ev.type === 'touchstart' ? ev.touches[0] : ev,
-      xPos = clickEv.pageX - offset.left,
-      yPos = clickEv.pageY - offset.top,
-      diameter,
       radius,
-      rippleEl;
+      diameter;
 
-  // calculate diameter
-  diameter = Math.sqrt(offset.width * offset.width + offset.height * offset.height) * 2;
+  // calculate radius
+  radius = Math.sqrt(offset.width * offset.width + offset.height * offset.height);
 
-  // create ripple element
-  rippleEl = _angular2.default.element('<div class="' + rippleClass + '"></div>');
+  diameter = radius * 2 + 'px';
 
-  radius = diameter / 2;
-
-  rippleEl.css({
-    height: diameter + 'px',
-    width: diameter + 'px',
-    top: yPos - radius + 'px',
-    left: xPos - radius + 'px'
+  // set position and dimensions
+  jqLite.css(rippleEl, {
+    width: diameter,
+    height: diameter,
+    top: Math.round(clickEv.pageY - offset.top - radius) + 'px',
+    left: Math.round(clickEv.pageX - offset.left - radius) + 'px'
   });
 
-  // add to DOM
-  element.append(rippleEl);
+  jqLite.removeClass(rippleEl, 'mui--is-animating');
+  jqLite.addClass(rippleEl, 'mui--is-visible');
 
   // start animation
   util.requestAnimationFrame(function () {
-    rippleEl.addClass('mui--animate-in mui--active');
+    jqLite.addClass(rippleEl, 'mui--is-animating');
   });
 }
 
@@ -118,35 +117,14 @@ function mouseDownHandler(ev) {
  * @param {Event} ev - The DOM event
  */
 function mouseUpHandler(ev) {
-  var children = this.children,
-      i = children.length,
-      rippleEls = [],
-      el;
+  // get ripple element
+  var rippleEl = this._rippleEl;
 
-  // animate out ripples
-  while (i--) {
-    el = children[i];
-    if (jqLite.hasClass(el, rippleClass)) {
-      jqLite.addClass(el, 'mui--animate-out');
-      rippleEls.push(el);
-    }
-  }
-
-  // remove ripples after animation
-  if (rippleEls.length) {
-    setTimeout(function () {
-      var i = rippleEls.length,
-          el,
-          parentNode;
-
-      // remove elements
-      while (i--) {
-        el = rippleEls[i];
-        parentNode = el.parentNode;
-        if (parentNode) parentNode.removeChild(el);
-      }
-    }, animationDuration);
-  }
+  // allow a repaint to occur before removing class so animation shows for
+  // tap events
+  util.requestAnimationFrame(function () {
+    jqLite.removeClass(rippleEl, 'mui--is-visible');
+  });
 }
 
 /** Define module API */

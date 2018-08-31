@@ -8,6 +8,7 @@
 
 var jqLite = require('./lib/jqLite'),
     util = require('./lib/util'),
+    animationHelpers = require('./lib/animationHelpers'),
     formlib = require('./lib/forms'),
     wrapperClass = 'mui-select',
     cssSelector = '.mui-select > select',
@@ -30,30 +31,52 @@ function initialize(selectEl) {
   // use default behavior on touch devices
   if ('ontouchstart' in doc.documentElement) return;
 
-  // initialize element
-  new Select(selectEl);
-}
+  // NOTE: To get around cross-browser issues with <select> behavior we will
+  //       defer focus to the parent element and handle events there
 
+  var wrapperEl = selectEl.parentNode;
 
-/**
- * Creates a new Select object
- * @class
- */
-function Select(selectEl) {
-  // instance variables
-  this.selectEl = selectEl;
-  this.wrapperEl = selectEl.parentNode;
-  this.useDefault = false;  // currently unused but let's keep just in case
+  // exit if use-default
+  if (jqLite.hasClass(wrapperEl, 'mui-select--use-default')) return;
 
-  // attach event handlers
-  jqLite.on(selectEl, 'mousedown', util.callback(this, 'mousedownHandler'));
-  jqLite.on(selectEl, 'focus', util.callback(this, 'focusHandler'));
-  jqLite.on(selectEl, 'click', util.callback(this, 'clickHandler'));
-  
-  // make wrapper focusable and fix firefox bug
-  this.wrapperEl.tabIndex = -1;
-  var callbackFn = util.callback(this, 'wrapperFocusHandler');
-  jqLite.on(this.wrapperEl, 'focus', callbackFn);
+  // initialize variables
+  wrapperEl._selectEl = selectEl;
+  wrapperEl._menu = null;
+  wrapperEl._q = '';
+  wrapperEl._qTimeout = null;
+
+  // make wrapper tab focusable, remove tab focus from <select>
+  if (!selectEl.disabled) wrapperEl.tabIndex = 0;
+  selectEl.tabIndex = -1;
+
+  // prevent built-in menu from opening on <select>
+  jqLite.on(selectEl, 'mousedown', onInnerMouseDown);
+
+  // attach event listeners for custom menu
+  jqLite.on(wrapperEl, 'click', onWrapperClick);
+  jqLite.on(wrapperEl, 'blur focus', onWrapperBlurOrFocus);
+  jqLite.on(wrapperEl, 'keydown', onWrapperKeyDown);
+  jqLite.on(wrapperEl, 'keypress', onWrapperKeyPress);
+
+  // add element to detect 'disabled' change (using sister element due to 
+  // IE/Firefox issue
+  var el = document.createElement('div');
+  el.className = 'mui-event-trigger';
+  wrapperEl.appendChild(el);
+
+  // handle 'disabled' add/remove
+  jqLite.on(el, animationHelpers.animationEvents, function(ev) {
+    var parentEl = ev.target.parentNode;
+
+    // no need to propagate
+    ev.stopPropagation();
+
+    if (ev.animationName === 'mui-node-disabled') {
+      parentEl.removeAttribute('tabIndex');
+    } else {
+      parentEl.tabIndex = 0;
+    }    
+  });
 }
 
 
@@ -61,84 +84,126 @@ function Select(selectEl) {
  * Disable default dropdown on mousedown.
  * @param {Event} ev - The DOM event
  */
-Select.prototype.mousedownHandler = function(ev) {
-  if (ev.button !== 0 || this.useDefault === true) return;
+function onInnerMouseDown(ev) {
+  // only left clicks
+  if (ev.button !== 0) return;
+  
+  // prevent built-in menu from opening
   ev.preventDefault();
 }
 
 
 /**
- * Handle focus event on select element.
+ * Dispatch focus and blur events on inner <select> element.
  * @param {Event} ev - The DOM event
  */
-Select.prototype.focusHandler = function(ev) {
-  // check flag
-  if (this.useDefault === true) return;
-
-  var selectEl = this.selectEl,
-      wrapperEl = this.wrapperEl,
-      tabIndex = selectEl.tabIndex,
-      keydownFn = util.callback(this, 'keydownHandler');
-
-  // attach keydown handler
-  jqLite.on(doc, 'keydown', keydownFn);
-
-  // disable tabfocus once
-  selectEl.tabIndex = -1;
-  jqLite.one(wrapperEl, 'blur', function() {
-    selectEl.tabIndex = tabIndex;
-    jqLite.off(doc, 'keydown', keydownFn);
-  });
-  
-  // defer focus to parent
-  wrapperEl.focus();
+function onWrapperBlurOrFocus(ev) {
+  util.dispatchEvent(this._selectEl, ev.type, false, false);
 }
 
 
 /**
- * Handle keydown events on doc
+ * Handle keydown events when wrapper is focused
  **/
-Select.prototype.keydownHandler = function(ev) {
-  var keyCode = ev.keyCode;
+function onWrapperKeyDown(ev) {
+  if (ev.defaultPrevented) return;
 
-  // spacebar, down, up
-  if (keyCode === 32 || keyCode === 38 || keyCode === 40) {
-    // prevent win scroll
-    ev.preventDefault();
-    
-    if (this.selectEl.disabled !== true) this.renderMenu();
+  var keyCode = ev.keyCode,
+      menu = this._menu;
+
+  if (!menu) {
+    // spacebar, down, up
+    if (keyCode === 32 || keyCode === 38 || keyCode === 40) {
+      ev.preventDefault();
+
+      // open custom menu
+      renderMenu(this);
+    }
+
+  } else {
+    // tab
+    if (keyCode === 9) return menu.destroy();
+  
+    // escape | up | down | enter
+    if (keyCode === 27 || keyCode === 40 || keyCode === 38 || keyCode === 13) {
+      ev.preventDefault();
+    }
+
+    if (keyCode === 27) {
+      // escape
+      menu.destroy();
+    } else if (keyCode === 40) {
+      // up
+      menu.increment();
+    } else if (keyCode === 38) {
+      // down
+      menu.decrement();
+    } else if (keyCode === 13) {
+      // enter
+      menu.selectCurrent();
+      menu.destroy();
+    }
   }
 }
 
 
 /**
- * Handle focus event on wrapper element.
+ *
  */
-Select.prototype.wrapperFocusHandler = function() {
-  // firefox bugfix
-  if (this.selectEl.disabled) return this.wrapperEl.blur();
+function onWrapperKeyPress(ev) {
+  var menu = this._menu;
+
+  // exit if default prevented or menu is closed
+  if (ev.defaultPrevented || !menu) return;
+
+  // handle query timer
+  var self = this;
+  clearTimeout(this._qTimeout);
+  this._q += ev.key;
+  this._qTimeout = setTimeout(function() {self._q = '';}, 300);
+
+  // select first match alphabetically
+  var prefixRegex = new RegExp('^' + this._q, 'i'),
+      itemArray = menu.itemArray,
+      pos;
+
+  for (pos in itemArray) {
+    if (prefixRegex.test(itemArray[pos].innerText)) {
+      menu.selectPos(pos);
+      break;
+    }
+  }
 }
 
 
 /**
- * Handle click events on select element.
+ * Handle click events on wrapper element.
  * @param {Event} ev - The DOM event
  */
-Select.prototype.clickHandler = function(ev) {
-  // only left clicks
-  if (ev.button !== 0) return;
-  this.renderMenu();
+function onWrapperClick(ev) {
+  // only left clicks, check default and disabled flags
+  if (ev.button !== 0 || this._selectEl.disabled) return;
+
+  // focus wrapper
+  this.focus();
+
+  // open menu
+  renderMenu(this);
 }
 
 
 /**
- * Render options dropdown.
+ * Render options menu
  */
-Select.prototype.renderMenu = function() {
-  // check and reset flag
-  if (this.useDefault === true) return this.useDefault = false;
+function renderMenu(wrapperEl) {
+  // check instance
+  if (wrapperEl._menu) return;
 
-  new Menu(this.wrapperEl, this.selectEl);
+  // render custom menu
+  wrapperEl._menu = new Menu(wrapperEl, wrapperEl._selectEl, function() {
+    wrapperEl._menu = null;  // de-reference instance
+    wrapperEl.focus();
+  });
 }
 
 
@@ -146,7 +211,7 @@ Select.prototype.renderMenu = function() {
  * Creates a new Menu
  * @class
  */
-function Menu(wrapperEl, selectEl) {
+function Menu(wrapperEl, selectEl, wrapperCallbackFn) {
   // add scroll lock
   util.enableScrollLock();
 
@@ -155,31 +220,37 @@ function Menu(wrapperEl, selectEl) {
   this.origPos = null;
   this.currentPos = null;
   this.selectEl = selectEl;
-  this.menuEl = this._createMenuEl(wrapperEl, selectEl);
-  this.clickCallbackFn = util.callback(this, 'clickHandler');
-  this.keydownCallbackFn = util.callback(this, 'keydownHandler');
-  this.destroyCallbackFn = util.callback(this, 'destroy');
+  this.wrapperEl = wrapperEl;
+
+  var res = this._createMenuEl(wrapperEl, selectEl),
+      menuEl = this.menuEl = res[0];
+
+  var cb = util.callback;
+
+  this.onClickCB = cb(this, 'onClick');
+  this.destroyCB = cb(this, 'destroy');
+  this.wrapperCallbackFn = wrapperCallbackFn;
 
   // add to DOM
   wrapperEl.appendChild(this.menuEl);
-  jqLite.scrollTop(this.menuEl, this.menuEl._muiScrollTop);
 
-  // blur active element
-  setTimeout(function() {
-    // ie10 bugfix
-    if (doc.activeElement.nodeName.toLowerCase() !== "body") {
-      doc.activeElement.blur();
-    }
-  }, 0);
+  // set position
+  var props = formlib.getMenuPositionalCSS(
+    wrapperEl,
+    menuEl,
+    res[1]
+  );
+  
+  jqLite.css(menuEl, props);
+  jqLite.scrollTop(menuEl, props.scrollTop);
 
   // attach event handlers
-  jqLite.on(this.menuEl, 'click', this.clickCallbackFn);
-  jqLite.on(doc, 'keydown', this.keydownCallbackFn);
-  jqLite.on(win, 'resize', this.destroyCallbackFn);
+  var destroyCB = this.destroyCB;
+  jqLite.on(menuEl, 'click', this.onClickCB);
+  jqLite.on(win, 'resize', destroyCB);
 
   // attach event handler after current event loop exits
-  var fn = this.destroyCallbackFn;
-  setTimeout(function() {jqLite.on(doc, 'click', fn);}, 0);
+  setTimeout(function() {jqLite.on(doc, 'click', destroyCB);}, 0);
 }
 
 
@@ -192,8 +263,11 @@ Menu.prototype._createMenuEl = function(wrapperEl, selectEl) {
       childEls = selectEl.children,
       itemArray = this.itemArray,
       itemPos = 0,
+      origPos = -1,
       selectedPos = 0,
       selectedRow = 0,
+      numRows = 0,
+      docFrag = document.createDocumentFragment(),  // for speed
       loopEl,
       rowEl,
       optionEls,
@@ -213,7 +287,7 @@ Menu.prototype._createMenuEl = function(wrapperEl, selectEl) {
       rowEl = doc.createElement('div');
       rowEl.textContent = loopEl.label;
       rowEl.className = 'mui-optgroup__label';
-      menuEl.appendChild(rowEl);
+      docFrag.appendChild(rowEl);
 
       inGroup = true;
       optionEls = loopEl.children;
@@ -233,7 +307,9 @@ Menu.prototype._createMenuEl = function(wrapperEl, selectEl) {
       // handle optgroup options
       if (inGroup) jqLite.addClass(rowEl, 'mui-optgroup__option');
 
-      if (loopEl.disabled) {
+      if (loopEl.hidden) {
+        continue;
+      } else if (loopEl.disabled) {
         // do not attach muiIndex to disable <option> elements to make them
         // unselectable.
         jqLite.addClass(rowEl, disabledClass);
@@ -243,8 +319,8 @@ Menu.prototype._createMenuEl = function(wrapperEl, selectEl) {
 
         // handle selected options
         if (loopEl.selected) {
-          jqLite.addClass(rowEl, selectedClass);
-          selectedRow = menuEl.children.length;
+          selectedRow = numRows;
+          origPos = itemPos;
           selectedPos = itemPos;
         }
 
@@ -253,53 +329,22 @@ Menu.prototype._createMenuEl = function(wrapperEl, selectEl) {
         itemPos += 1;
       }
 
-      menuEl.appendChild(rowEl);
+      docFrag.appendChild(rowEl);
+      numRows += 1;
     }
   }
 
+  // add rows to menu
+  menuEl.appendChild(docFrag);
+
   // save indices
-  this.origPos = selectedPos;
+  this.origPos = origPos;
   this.currentPos = selectedPos;
 
-  // set position
-  var props = formlib.getMenuPositionalCSS(
-    wrapperEl,
-    menuEl.children.length,
-    selectedRow
-  );
+  // paint selectedPos
+  if (itemArray.length) jqLite.addClass(itemArray[selectedPos], selectedClass);
 
-  jqLite.css(menuEl, props);
-  menuEl._muiScrollTop = props.scrollTop;
-
-  return menuEl;
-}
-
-
-/**
- * Handle keydown events on doc element.
- * @param {Event} ev - The DOM event
- */
-Menu.prototype.keydownHandler = function(ev) {
-  var keyCode = ev.keyCode;
-
-  // tab
-  if (keyCode === 9) return this.destroy();
-  
-  // escape | up | down | enter
-  if (keyCode === 27 || keyCode === 40 || keyCode === 38 || keyCode === 13) {
-    ev.preventDefault();
-  }
-
-  if (keyCode === 27) {
-    this.destroy();
-  } else if (keyCode === 40) {
-    this.increment();
-  } else if (keyCode === 38) {
-    this.decrement();
-  } else if (keyCode === 13) {
-    this.selectCurrent();
-    this.destroy();
-  }
+  return [menuEl, selectedRow];
 }
 
 
@@ -307,7 +352,7 @@ Menu.prototype.keydownHandler = function(ev) {
  * Handle click events on menu element.
  * @param {Event} ev - The DOM event
  */
-Menu.prototype.clickHandler = function(ev) {
+Menu.prototype.onClick = function(ev) {
   // don't allow events to bubble
   ev.stopPropagation();
 
@@ -363,8 +408,36 @@ Menu.prototype.selectCurrent = function() {
   if (this.currentPos !== this.origPos) {
     this.selectEl.selectedIndex = this.itemArray[this.currentPos]._muiIndex;
 
-    // trigger change event
-    util.dispatchEvent(this.selectEl, 'change');
+    // trigger change and input events
+    util.dispatchEvent(this.selectEl, 'change', true, false);
+    util.dispatchEvent(this.selectEl, 'input', true, false);
+  }
+}
+
+
+/**
+ * Select item at position
+ */
+Menu.prototype.selectPos = function(pos) {
+  // un-select old row                                                      
+  jqLite.removeClass(this.itemArray[this.currentPos], selectedClass);
+
+  // select new row
+  this.currentPos = pos;
+  var itemEl = this.itemArray[pos];
+  jqLite.addClass(itemEl, selectedClass);
+
+  // scroll (if necessary)
+  var menuEl = this.menuEl,
+      itemRect = itemEl.getBoundingClientRect();
+
+  if (itemRect.top < 0) {
+    // menu item is hidden above visible window
+    menuEl.scrollTop = menuEl.scrollTop + itemRect.top - 5;
+  } else if (itemRect.top > window.innerHeight) {
+    // menu item is hidden below visible window
+    menuEl.scrollTop = menuEl.scrollTop + 
+      (itemRect.top + itemRect.height - window.innerHeight) + 5;
   }
 }
 
@@ -373,20 +446,20 @@ Menu.prototype.selectCurrent = function() {
  * Destroy menu and detach event handlers
  */
 Menu.prototype.destroy = function() {
-  // remove element and focus element
-  var parentNode = this.menuEl.parentNode;
-  if (parentNode) parentNode.removeChild(this.menuEl);
-
-  this.selectEl.focus();
-
   // remove scroll lock
   util.disableScrollLock(true);
 
   // remove event handlers
   jqLite.off(this.menuEl, 'click', this.clickCallbackFn);
-  jqLite.off(doc, 'keydown', this.keydownCallbackFn);
-  jqLite.off(doc, 'click', this.destroyCallbackFn);
-  jqLite.off(win, 'resize', this.destroyCallbackFn);
+  jqLite.off(doc, 'click', this.destroyCB);
+  jqLite.off(win, 'resize', this.destroyCB);
+
+  // remove element and execute wrapper callback
+  var parentNode = this.menuEl.parentNode;
+  if (parentNode) {
+    parentNode.removeChild(this.menuEl);
+    this.wrapperCallbackFn();
+  }
 }
 
 
@@ -395,15 +468,13 @@ module.exports = {
   /** Initialize module listeners */
   initListeners: function() {
     // markup elements available when method is called
-    var elList = doc.querySelectorAll(cssSelector);
-    for (var i=elList.length - 1; i >= 0; i--) initialize(elList[i]);
+    var elList = doc.querySelectorAll(cssSelector),
+        i = elList.length;
+    while (i--) initialize(elList[i]);
 
-    // listen for new elements
-    util.onNodeInserted(function(el) {
-      if (el.tagName === 'SELECT' &&
-          jqLite.hasClass(el.parentNode, wrapperClass)) {
-        initialize(el);
-      }
+    // listen for mui-node-inserted events
+    animationHelpers.onAnimationStart('mui-select-inserted', function(ev) {
+      initialize(ev.target);
     });
   }
 };

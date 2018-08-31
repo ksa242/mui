@@ -5,16 +5,18 @@
 
 import assert from 'assert';
 import React from 'react';
-import ReactUtils from 'react-addons-test-utils';
 import ReactDOM from 'react-dom';
+import ReactUtils from 'react-dom/test-utils';
 
+import { requestAnimationFrame } from '../../src/js/lib/util';
+import jqLite from '../../src/js/lib/jqLite';
 import Button from '../../src/react/button';
 
 import { getShallowRendererOutput } from '../lib/react-helpers';
 
 
-describe('react/button', function() {
-  it('renders properly', function() {
+describe('react/button', function () {
+  it('renders properly', function () {
     let result = getShallowRendererOutput(<Button>test</Button>);
     assert.equal(result.type, 'button');
     assert.equal(/\bmui-btn\b/.test(result.props.className), true);
@@ -28,13 +30,13 @@ describe('react/button', function() {
         test
       </Button>
     );
-    assert.equal(/\badditional\b/.test(result.props.className), true)
-  })
+    assert.equal(/\badditional\b/.test(result.props.className), true);
+  });
 
 
-  it('renders properly with additional styles', function() {
+  it('renders properly with additional styles', function () {
     let result = getShallowRendererOutput(
-      <Button style={{additonal: 'style'}}>
+      <Button style={{ additonal: 'style' }}>
         test
       </Button>
     );
@@ -43,7 +45,7 @@ describe('react/button', function() {
   });
 
 
-  it('supports colors', function() {
+  it('supports colors', function () {
     let result = getShallowRendererOutput(
       <Button color="primary">test</Button>
     );
@@ -51,7 +53,7 @@ describe('react/button', function() {
   });
 
 
-  it('supports variants', function() {
+  it('supports variants', function () {
     let result = getShallowRendererOutput(
       <Button variant="raised">test</Button>
     );
@@ -59,13 +61,13 @@ describe('react/button', function() {
   });
 
 
-  it('supports sizes', function() {
+  it('supports sizes', function () {
     let result = getShallowRendererOutput(<Button size="large">test</Button>);
     assert.equal(/mui-btn--large/.test(result.props.className), true);
   });
 
 
-  it('supports type attribute', function() {
+  it('supports type attribute', function () {
     // check default
     let result = getShallowRendererOutput(<Button>test</Button>);
     assert.equal(result.props.type, null);
@@ -81,12 +83,12 @@ describe('react/button', function() {
   });
 
 
-  it('supports click, mouse and touch events', function() {
+  it('supports click, mouse and touch events', function () {
     let executedEvents = [],
-        triggeredEvents = [];
+      triggeredEvents = [];
 
     // define callback
-    const fn = function(ev) {executedEvents.push(ev.type);};
+    const fn = function (ev) { executedEvents.push(ev.type); };
 
     // define props
     const props = {
@@ -111,7 +113,7 @@ describe('react/button', function() {
       eventType = eventName.toLowerCase();
 
       // trigger event
-      ReactUtils.Simulate[eventName](node.refs.buttonEl, {type: eventType});
+      ReactUtils.Simulate[eventName](node.buttonElRef, { type: eventType });
       triggeredEvents.push(eventType);
     }
 
@@ -120,46 +122,32 @@ describe('react/button', function() {
   });
 
 
-  it('renders ripples on click', function() {
-    let node = ReactUtils.renderIntoDocument(<Button>test</Button>);
-    let buttonEl = node.refs.buttonEl;
+  it('renders ripples on click', function (done) {
+    let node = ReactUtils.renderIntoDocument(<Button>test</Button>),
+      buttonEl = node.buttonElRef,
+      rippleEl = node.rippleElRef;
 
-    // check state before ripple
-    assert.equal(Object.keys(node.state.ripples).length, 0);
-    assert.equal(buttonEl.children.length, 0);
+    // check state before click
+    assert.equal(node.state.ripple, null);
+    assert.equal(jqLite.hasClass(rippleEl, 'mui--is-visible'), false);
 
     // trigger ripple
     ReactUtils.Simulate.mouseDown(buttonEl);
 
-    // check state after ripple
-    assert.equal(Object.keys(node.state.ripples).length, 1);
-    assert.equal(buttonEl.children.length, 1);
-    assert.equal(buttonEl.children[0].className, 'mui-ripple-effect');
+    // check state after click
+    assert.equal(jqLite.hasClass(rippleEl, 'mui--is-visible'), true);
+    assert.equal(jqLite.hasClass(rippleEl, 'mui--is-animating'), false);
 
-    // add another ripple
-    ReactUtils.Simulate.mouseDown(node.refs.buttonEl);
-    assert.equal(Object.keys(node.state.ripples).length, 2);
-  });
+    // check animation
+    requestAnimationFrame(function () {
+      assert.equal(jqLite.hasClass(rippleEl, 'mui--is-animating'), true);
 
-
-  it('removes ripples after mouseup and animation duration', function(done) {
-    this.timeout(700);
-
-    let node = ReactUtils.renderIntoDocument(<Button>test</Button>);
-
-    ReactUtils.Simulate.mouseDown(node.refs.buttonEl);
-    ReactUtils.Simulate.mouseUp(node.refs.buttonEl);
-    assert.equal(Object.keys(node.state.ripples).length, 1);
-
-    setTimeout(function() {
-      // check that ripple is still there
-      assert.equal(Object.keys(node.state.ripples).length, 1);
-    }, 500);
-
-    setTimeout(function() {
-      // check that ripple has been removed
-      assert.equal(Object.keys(node.state.ripples).length, 0);
-      done();
-    }, 601);
+      // remove ripple
+      ReactUtils.Simulate.mouseUp(node.buttonElRef);
+      requestAnimationFrame(function () {
+        assert.equal(jqLite.hasClass(rippleEl, 'mui--is-visible'), false);
+        done();
+      });
+    });
   });
 });

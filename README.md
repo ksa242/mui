@@ -7,13 +7,14 @@ MUI is a lightweight CSS framework that follows Google's Material Design guideli
 [![Join the chat at https://gitter.im/muicss/mui](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/muicss/mui?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status](https://travis-ci.org/muicss/mui.svg?branch=master)](https://travis-ci.org/muicss/mui)
 [![Dependency Status](https://david-dm.org/muicss/mui.svg)](https://david-dm.org/muicss/mui)
-[![devDependency Status](https://david-dm.org/muicss/mui/dev-status.svg)](https://david-dm.org/muicss/mui#info=devDependencies)
+[![devDependency Status](https://david-dm.org/muicss/mui/dev-status.svg)](https://david-dm.org/muicss/mui?type=dev)
+[![CDNJS](https://img.shields.io/cdnjs/v/muicss.svg)](https://cdnjs.com/libraries/muicss)
 
 **Use From the CDN:**
 
 ```html
-<link href="//cdn.muicss.com/mui-0.8.1/css/mui.min.css" rel="stylesheet" type="text/css" />
-<script src="//cdn.muicss.com/mui-0.8.1/js/mui.min.js"></script>
+<link href="//cdn.muicss.com/mui-0.9.40/css/mui.min.css" rel="stylesheet" type="text/css" />
+<script src="//cdn.muicss.com/mui-0.9.40/js/mui.min.js"></script>
 ```
 
 Or for development you can use the latest:
@@ -83,14 +84,14 @@ MUI is tested and works in:
 1. Build examples
 
    ```bash
-   $ ./node_modules/.bin/gulp examples:build
+   $ npm run build-examples
    ```
 
    To view the examples you can use any static file server. To use the nodejs `http-server` module:
 
    ```bash
    $ npm install http-server
-   $ ./node_modules/.bin/http-server -p 3000
+   $ npm run http-server -- -p 3000
    ```
 
    Then visit http://localhost:3000/examples
@@ -110,7 +111,7 @@ $ npm test
 To run the E2E tests first compile the unit test files into a version that runs in the browser:
 
 ```bash
-$ ./node_modules/.bin/gulp e2e-tests:build
+$ npm run build-e2e-tests
 ```
 
 Then visit http://localhost:3000/e2e-tests
@@ -120,7 +121,7 @@ Then visit http://localhost:3000/e2e-tests
 ### CDN
 
 ```bash
-$ ./node_modules/.bin/gulp cdn:build
+$ npm run build-cdn
 ```
 
 The build will be located in the `packages/cdn` directory:
@@ -142,9 +143,17 @@ cdn/
 │   └── mui-email-styletag-rtl.css
 ├── extra
 │   ├── mui-angular-combined.js
+│   ├── mui-angular-combined.min.js
 │   ├── mui-colors.css
+│   ├── mui-colors.min.css
 │   ├── mui-combined.js
-│   └── mui-react-combined.js
+│   ├── mui-combined.min.js
+│   ├── mui-noglobals.css
+│   ├── mui-noglobals.min.css
+│   ├── mui-noglobals-rtl.css
+│   ├── mui-noglobals-rtl.min.css
+│   ├── mui-react-combined.js
+│   └── mui-react-combined.min.js
 ├── js
 │   ├── mui.js
 │   └── mui.min.js
@@ -153,13 +162,13 @@ cdn/
 │   └── mui-react.min.js
 └── webcomponents
     ├── mui-webcomponents.js
-    └── mui-webcomponents.min.js
+        └── mui-webcomponents.min.js
 </pre>
 
 ### NPM
 
 ```bash
-$ ./node_modules/.bin/gulp npm:build
+$ npm run build-npm
 ```
 
 The NPM package is located in the `packages/npm` directory.
@@ -167,7 +176,7 @@ The NPM package is located in the `packages/npm` directory.
 ### Meteor
 
 ```bash
-$ ./node_modules/.bin/gulp meteor:build
+$ npm run build-meteor
 ```
 
 The Meteor package is located in the `packages/meteor` directory.

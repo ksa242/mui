@@ -28,13 +28,10 @@ var util = babelHelpers.interopRequireWildcard(_util);
 
 var _helpers = require('./_helpers');
 
-var PropTypes = _react2.default.PropTypes;
-
 /**
  * Option constructor
  * @class
  */
-
 var Option = function (_React$Component) {
   babelHelpers.inherits(Option, _React$Component);
 
@@ -46,10 +43,10 @@ var Option = function (_React$Component) {
   babelHelpers.createClass(Option, [{
     key: 'render',
     value: function render() {
-      var _props = this.props;
-      var children = _props.children;
-      var label = _props.label;
-      var reactProps = babelHelpers.objectWithoutProperties(_props, ['children', 'label']);
+      var _props = this.props,
+          children = _props.children,
+          label = _props.label,
+          reactProps = babelHelpers.objectWithoutProperties(_props, ['children', 'label']);
 
 
       return _react2.default.createElement(
@@ -65,9 +62,6 @@ var Option = function (_React$Component) {
 /** Define module API */
 
 
-Option.propTypes = {
-  label: PropTypes.string
-};
 Option.defaultProps = {
   className: '',
   label: null

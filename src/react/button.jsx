@@ -11,10 +11,8 @@ import * as jqLite from '../js/lib/jqLite';
 import * as util from '../js/lib/util';
 
 
-const PropTypes = React.PropTypes,
-      btnClass = 'mui-btn',
-      btnAttrs = {color: 1, variant: 1, size: 1},
-      animationDuration = 600;
+const btnClass = 'mui-btn',
+  btnAttrs = { color: 1, variant: 1, size: 1 };
 
 
 /**
@@ -24,13 +22,6 @@ const PropTypes = React.PropTypes,
 class Button extends React.Component {
   constructor(props) {
     super(props);
-
-    this.state = {
-      ripples: {}
-    };
-
-    this.rippleTimers = [];
-
     let cb = util.callback;
     this.onMouseDownCB = cb(this, 'onMouseDown');
     this.onMouseUpCB = cb(this, 'onMouseUp');
@@ -39,10 +30,9 @@ class Button extends React.Component {
     this.onTouchEndCB = cb(this, 'onTouchEnd');
   }
 
-  static propTypes = {
-    color: PropTypes.oneOf(['default', 'primary', 'danger', 'dark', 'accent']),
-    size: PropTypes.oneOf(['default', 'small', 'large']),
-    variant: PropTypes.oneOf(['default', 'flat', 'raised', 'fab'])
+  state = {
+    rippleStyle: {},
+    rippleIsVisible: false
   };
 
   static defaultProps = {
@@ -54,21 +44,13 @@ class Button extends React.Component {
 
   componentDidMount() {
     // disable MUI js
-    let el = this.refs.buttonEl;
+    let el = this.buttonElRef;
     el._muiDropdown = true;
     el._muiRipple = true;
   }
 
-  componentWillUnmount() {
-    // clear ripple timers
-    let timers = this.rippleTimers,
-        i = timers.length;
-
-    while (i--) clearTimeout(timers[i]);
-  }
-
   onMouseDown(ev) {
-    this.addRipple(ev);
+    this.showRipple(ev);
 
     // execute callback
     const fn = this.props.onMouseDown;
@@ -76,15 +58,15 @@ class Button extends React.Component {
   }
 
   onMouseUp(ev) {
-    this.removeRipples(ev);
-    
+    this.hideRipple(ev);
+
     // execute callback
     const fn = this.props.onMouseUp;
     fn && fn(ev);
   }
 
   onMouseLeave(ev) {
-    this.removeRipples(ev);
+    this.hideRipple(ev);
 
     // execute callback
     const fn = this.props.onMouseLeave;
@@ -92,79 +74,85 @@ class Button extends React.Component {
   }
 
   onTouchStart(ev) {
-    this.addRipple(ev);
-    
+    this.showRipple(ev);
+
     // execute callback
     const fn = this.props.onTouchStart;
     fn && fn(ev);
   }
 
   onTouchEnd(ev) {
-    this.removeRipples(ev);
+    this.hideRipple(ev);
 
     // execute callback
     const fn = this.props.onTouchEnd;
     fn && fn(ev);
   }
 
-  addRipple(ev) {
-    let buttonEl = this.refs.buttonEl;
+  showRipple(ev) {
+    let buttonEl = this.buttonElRef;
 
     // de-dupe touch events
     if ('ontouchstart' in buttonEl && ev.type === 'mousedown') return;
 
     // get (x, y) position of click
-    let offset = jqLite.offset(this.refs.buttonEl),
-        clickEv;
+    let offset = jqLite.offset(this.buttonElRef),
+      clickEv;
 
     if (ev.type === 'touchstart' && ev.touches) clickEv = ev.touches[0];
     else clickEv = ev;
 
-    // choose diameter
-    let diameter = Math.sqrt(offset.width * offset.width +
-      offset.height * offset.height) * 2;
+    // calculate radius
+    let radius = Math.sqrt(offset.width * offset.width +
+      offset.height * offset.height);
+
+    let diameterPx = radius * 2 + 'px';
 
     // add ripple to state
-    let ripples = this.state.ripples;
-    let key = Date.now();
-
-    ripples[key] = {
-      xPos: clickEv.pageX - offset.left,
-      yPos: clickEv.pageY - offset.top,
-      diameter: diameter,
-      animateOut: false
-    };
-
-    this.setState({ ripples });
+    this.setState({
+      rippleStyle: {
+        top: Math.round(clickEv.pageY - offset.top - radius) + 'px',
+        left: Math.round(clickEv.pageX - offset.left - radius) + 'px',
+        width: diameterPx,
+        height: diameterPx
+      },
+      rippleIsVisible: true
+    });
   }
 
-  removeRipples(ev) {
-    // animate out ripples
-    let ripples = this.state.ripples,
-        deleteKeys = Object.keys(ripples),
-        k;
+  hideRipple(ev) {
+    this.setState({ rippleIsVisible: false });
+  }
 
-    for (k in ripples) ripples[k].animateOut = true;
-    this.setState({ ripples });
+  componentDidUpdate(prevProps, prevState) {
+    let state = this.state,
+      rippleEl = this.rippleElRef;
 
-    // remove ripples after animation
-    let timer = setTimeout(() => {
-      let ripples = this.state.ripples,
-          i = deleteKeys.length;
+    // show ripple
+    if (state.rippleIsVisible && !prevState.rippleIsVisible) {
+      jqLite.removeClass(rippleEl, 'mui--is-animating');
+      jqLite.addClass(rippleEl, 'mui--is-visible');
 
-      while (i--) delete ripples[deleteKeys[i]];
-      this.setState({ ripples });
-    }, animationDuration);
+      util.requestAnimationFrame(() => {
+        jqLite.addClass(rippleEl, 'mui--is-animating');
+      });
+    }
 
-    this.rippleTimers.push(timer);
+    // hide ripple
+    if (!state.rippleIsVisible && prevState.rippleIsVisible) {
+      // allow a repaint to occur before removing class so animation shows for
+      // tap events
+      util.requestAnimationFrame(() => {
+        jqLite.removeClass(rippleEl, 'mui--is-visible');
+      });
+    }
   }
 
   render() {
     let cls = btnClass,
-        k,
-        v;
+      k,
+      v;
 
-    const ripples = this.state.ripples;
     const { color, size, variant, ...reactProps } = this.props;
 
     // button attributes
@@ -176,7 +164,7 @@ class Button extends React.Component {
     return (
       <button
         { ...reactProps }
-        ref="buttonEl"
+        ref={el => { this.buttonElRef = el }}
         className={cls + ' ' + this.props.className}
         onMouseUp={this.onMouseUpCB}
         onMouseDown={this.onMouseDownCB}
@@ -185,73 +173,16 @@ class Button extends React.Component {
         onTouchEnd={this.onTouchEndCB}
       >
         {this.props.children}
-        {
-          Object.keys(ripples).map((k, i) => {
-            let v = ripples[k];
-
-            return (
-              <Ripple
-                key={k}
-                xPos={v.xPos}
-                yPos={v.yPos}
-                diameter={v.diameter}
-                animateOut={v.animateOut}
-              />
-            );
-          })
-        }
+        <span className="mui-btn__ripple-container">
+          <span
+            ref={el => { this.rippleElRef = el }}
+            className="mui-ripple"
+            style={this.state.rippleStyle}
+          >
+          </span>
+        </span>
       </button>
     );
-  }
-}
-
-
-/**
- * Ripple component
- * @class
- */
-class Ripple extends React.Component {
-  state = {
-    animateIn: false
-  };
-
-  static propTypes = {
-    xPos: PropTypes.number,
-    yPos: PropTypes.number,
-    diameter: PropTypes.number,
-    animateOut: PropTypes.bool
-  };
-
-  static defaultProps = {
-    xPos: 0,
-    yPos: 0,
-    diameter: 0,
-    animateOut: false
-  };
-
-  componentDidMount() {
-    util.requestAnimationFrame(() => {
-      this.setState({animateIn: true});
-    });
-  }
-
-  render() {
-    const diameter = this.props.diameter,
-          radius = diameter / 2;
-
-    const style = {
-      height: diameter,
-      width: diameter,
-      top: this.props.yPos - radius || 0,
-      left: this.props.xPos - radius || 0
-    };
-
-    // define class
-    let cls = 'mui-ripple-effect';
-    if (this.state.animateIn) cls += ' mui--animate-in mui--active';
-    if (this.props.animateOut) cls += ' mui--animate-out';
-
-    return <div className={cls} style={style} />;
   }
 }
 

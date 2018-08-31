@@ -8,13 +8,10 @@
 
 var jqLite = require('./lib/jqLite'),
     util = require('./lib/util'),
-    btnClass = 'mui-btn',
-    btnFABClass = 'mui-btn--fab',
-    rippleClass = 'mui-ripple-effect',
+    animationHelpers = require('./lib/animationHelpers'),
     supportsTouch = 'ontouchstart' in document.documentElement,
     mouseDownEvents = (supportsTouch) ? 'touchstart' : 'mousedown',
-    mouseUpEvents = (supportsTouch) ? 'touchend' : 'mouseup mouseleave',
-    animationDuration = 600;
+    mouseUpEvents = (supportsTouch) ? 'touchend' : 'mouseup mouseleave';
 
 
 /**
@@ -42,25 +39,52 @@ function mouseDownHandler(ev) {
   // only left clicks
   if (ev.type === 'mousedown' && ev.button !== 0) return;
 
-  var buttonEl = this;
+  var buttonEl = this,
+      rippleEl = buttonEl._rippleEl;
 
   // exit if button is disabled
-  if (buttonEl.disabled === true) return;
+  if (buttonEl.disabled) return;
 
-  // add mouseup event to button once
-  if (!buttonEl.muiMouseUp) {
+  if (!rippleEl) {
+    // add ripple container (to avoid https://github.com/muicss/mui/issues/169)
+    var el = document.createElement('span');
+    el.className = 'mui-btn__ripple-container';
+    el.innerHTML = '<span class="mui-ripple"></span>';
+    buttonEl.appendChild(el);
+
+    // cache reference to ripple element
+    rippleEl = buttonEl._rippleEl = el.children[0];
+
+    // add mouseup handler on first-click
     jqLite.on(buttonEl, mouseUpEvents, mouseUpHandler);
-    buttonEl.muiMouseUp = true;
   }
 
-  // create ripple element
-  var rippleEl = createRippleEl(ev, buttonEl);
+  // get ripple element offset values and (x, y) position of click
+  var offset = jqLite.offset(buttonEl),
+      clickEv = (ev.type === 'touchstart') ? ev.touches[0] : ev,
+      radius,
+      diameter;
 
-  buttonEl.appendChild(rippleEl);
+  // calculate radius
+  radius = Math.sqrt(offset.height * offset.height + 
+                     offset.width * offset.width);
 
-  // animate in
+  diameter = radius * 2 + 'px';
+
+  // set position and dimensions
+  jqLite.css(rippleEl, {
+    width: diameter,
+    height: diameter,
+    top: Math.round(clickEv.pageY - offset.top - radius) + 'px',
+    left: Math.round(clickEv.pageX - offset.left - radius) + 'px'
+  });
+
+  jqLite.removeClass(rippleEl, 'mui--is-animating');
+  jqLite.addClass(rippleEl, 'mui--is-visible');
+
+  // start animation
   util.requestAnimationFrame(function() {
-    jqLite.addClass(rippleEl, 'mui--animate-in mui--active');
+    jqLite.addClass(rippleEl, 'mui--is-animating');
   });
 }
 
@@ -70,70 +94,14 @@ function mouseDownHandler(ev) {
  * @param {Event} ev - The DOM event
  */
 function mouseUpHandler(ev) {
-  var children = this.children,
-      i = children.length,
-      rippleEls = [],
-      el;
+  // get ripple element
+  var rippleEl = this._rippleEl;
 
-  // animate out ripples
-  while (i--) {
-    el = children[i];
-    if (jqLite.hasClass(el, rippleClass)) {
-      jqLite.addClass(el, 'mui--animate-out');
-      rippleEls.push(el);
-    }
-  }
-
-  // remove ripples after animation
-  if (rippleEls.length) {
-    setTimeout(function() {
-      var i = rippleEls.length,
-          el,
-          parentNode;
-
-      // remove elements
-      while (i--) {
-        el = rippleEls[i];
-        parentNode = el.parentNode;
-        if (parentNode) parentNode.removeChild(el);
-      }
-    }, animationDuration);
-  }
-}
-
-
-/**
- * Create ripple element  
- * @param {Element} - buttonEl - The button element.
- */
-function createRippleEl(ev, buttonEl) {
-  // get (x, y) position of click
-  var offset = jqLite.offset(buttonEl),
-      clickEv = (ev.type === 'touchstart') ? ev.touches[0] : ev,
-      xPos = clickEv.pageX - offset.left,
-      yPos = clickEv.pageY - offset.top,
-      diameter,
-      radius,
-      rippleEl;
-
-  // calculate diameter
-  diameter = Math.sqrt(offset.width * offset.width + 
-                       offset.height * offset.height) * 2;
-
-  // create element
-  rippleEl = document.createElement('div'),
-  rippleEl.className = rippleClass;
-
-  radius = diameter / 2;
-
-  jqLite.css(rippleEl, {
-    height: diameter + 'px',
-    width: diameter + 'px',
-    top: yPos - radius + 'px',
-    left: xPos - radius + 'px'
+  // allow a repaint to occur before removing class so animation shows for
+  // tap events
+  util.requestAnimationFrame(function() {
+    jqLite.removeClass(rippleEl, 'mui--is-visible');
   });
-
-  return rippleEl;
 }
 
 
@@ -141,15 +109,14 @@ function createRippleEl(ev, buttonEl) {
 module.exports = {
   /** Initialize module listeners */
   initListeners: function() {
-    var doc = document;
-
     // markup elements available when method is called
-    var elList = doc.getElementsByClassName(btnClass);
-    for (var i=elList.length - 1; i >= 0; i--) initialize(elList[i]);
+    var elList = document.getElementsByClassName('mui-btn'),
+        i = elList.length;
+    while (i--) initialize(elList[i]);
 
     // listen for new elements
-    util.onNodeInserted(function(el) {
-      if (jqLite.hasClass(el, btnClass)) initialize(el);
+    animationHelpers.onAnimationStart('mui-btn-inserted', function(ev) {
+      initialize(ev.target);
     });
   }
 };

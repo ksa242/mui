@@ -13,18 +13,11 @@ import * as util from '../js/lib/util';
 import { getReactProps } from './_helpers';
 
 
-const PropTypes = React.PropTypes;
-
-
 /**
  * Option constructor
  * @class
  */
 class Option extends React.Component {
-  static propTypes = {
-    label: PropTypes.string
-  };
-
   static defaultProps = {
     className: '',
     label: null

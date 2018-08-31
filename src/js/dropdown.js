@@ -8,6 +8,7 @@
 
 var jqLite = require('./lib/jqLite'),
     util = require('./lib/util'),
+    animationHelpers = require('./lib/animationHelpers'),
     attrKey = 'data-mui-toggle',
     attrSelector = '[data-mui-toggle="dropdown"]',
     openClass = 'mui--is-open',
@@ -24,7 +25,11 @@ function initialize(toggleEl) {
   else toggleEl._muiDropdown = true;
 
   // use type "button" to prevent form submission by default
-  if (!toggleEl.hasAttribute('type')) toggleEl.type = 'button';
+  var tagName = toggleEl.tagName;
+  if ((tagName === 'INPUT' || tagName === 'BUTTON')
+      && !toggleEl.hasAttribute('type')) {
+    toggleEl.type = 'button';
+  }
 
   // attach click handler
   jqLite.on(toggleEl, 'click', clickHandler);
@@ -69,6 +74,13 @@ function toggleDropdown(toggleEl) {
       
     // remove event handlers
     jqLite.off(doc, 'click', closeDropdownFn);
+    jqLite.off(doc, 'keydown', handleKeyDownFn);
+  }
+
+  // close dropdown on escape key press
+  function handleKeyDownFn(ev) {
+    var key = ev.key;
+    if (key === 'Escape' || key === 'Esc') closeDropdownFn();
   }
 
   // method to open dropdown
@@ -83,8 +95,11 @@ function toggleDropdown(toggleEl) {
     // add open class to wrapper
     jqLite.addClass(menuEl, openClass);
 
-    // close dropdown when user clicks outside of menu
-    setTimeout(function() {jqLite.on(doc, 'click', closeDropdownFn);}, 0);
+    setTimeout(function() {
+      // close dropdown when user clicks outside of menu or hits escape key
+      jqLite.on(doc, 'click', closeDropdownFn);
+      jqLite.on(doc, 'keydown', handleKeyDownFn);
+    }, 0);
   }
 
   // toggle dropdown
@@ -97,15 +112,14 @@ function toggleDropdown(toggleEl) {
 module.exports = {
   /** Initialize module listeners */
   initListeners: function() {
-    var doc = document;
-
     // markup elements available when method is called
-    var elList = doc.querySelectorAll(attrSelector);
-    for (var i=elList.length - 1; i >= 0; i--) initialize(elList[i]);
+    var elList = document.querySelectorAll(attrSelector),
+        i = elList.length;
+    while (i--) {initialize(elList[i]);}
 
     // listen for new elements
-    util.onNodeInserted(function(el) {
-      if (el.getAttribute(attrKey) === 'dropdown') initialize(el);
+    animationHelpers.onAnimationStart('mui-dropdown-inserted', function(ev) {
+      initialize(ev.target);
     });
   }
 };

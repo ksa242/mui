@@ -4,7 +4,10 @@ node_modules
 .versions
 .sass-cache
 npm-debug.log
+yarn-error.log
 bower_components
 examples/assets/mui
 examples/email-inlined
 *.sublime-*
+.idea/
+package-lock.json

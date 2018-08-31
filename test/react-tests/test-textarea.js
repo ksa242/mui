@@ -4,9 +4,10 @@
  */
 
 import assert from 'assert';
+import createClass from'create-react-class';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import ReactUtils from 'react-addons-test-utils';
+import ReactUtils from 'react-dom/test-utils';
 
 import Textarea from '../../src/react/textarea';
 
@@ -15,17 +16,16 @@ import { getShallowRendererOutput } from '../lib/react-helpers';
 
 describe('react/textarea', function() {
   // capture console error messages
-  let errFn, elem;
+  let warnFn, elem;
 
 
   before(function() {
-    errFn = console.error;
-    console.error = function(msg) {throw Error(msg);};
+    warnFn = console.warn;
   });
 
 
   after(function() {
-    console.error = errFn;
+    console.warn = warnFn;
   });
 
 
@@ -53,20 +53,19 @@ describe('react/textarea', function() {
   });
 
 
-  it('does controlled component validation', function() {
-    // raises error when `value` defined and `onChange missing
-    assert.throws(
-      function() {
-        let elem = <Textarea value="my value"></Textarea>;
-        let instance = ReactUtils.renderIntoDocument(elem);
-      },
-      /MUI Warning/
-    );
+  it('does controlled component validation', function(done) {
+    console.warn = function (msg) {
+      assert.equal(/MUI Warning/.test(msg), true);
+      done();
+    }
+
+    let elem = <Textarea value="my value"></Textarea>;
+    let instance = ReactUtils.renderIntoDocument(elem);
   });
 
 
   it('can be used as controlled component', function() {
-    var TestApp = React.createClass({
+    var TestApp = createClass({
       getInitialState: function() {
         return {value: this.props.value};
       },
@@ -99,5 +98,16 @@ describe('react/textarea', function() {
     inputEl.value = 'test3';
     ReactUtils.Simulate.change(inputEl);
     assert.equal(instance.state.value, 'test3');
+  });
+
+
+  it('can be used as an uncontrolled component', function() {
+    let elem = <Textarea defaultValue="mydefaultvalue" />;
+    let instance = ReactUtils.renderIntoDocument(elem);
+    let findComponent = ReactUtils.findRenderedDOMComponentWithTag;
+    let inputEl = findComponent(instance, 'textarea');
+
+    assert.equal(inputEl, instance.controlEl);
+    assert.equal(instance.controlEl.value, 'mydefaultvalue');
   });
 });

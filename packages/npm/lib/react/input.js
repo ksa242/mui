@@ -14,37 +14,19 @@ var _react = require('react');
 
 var _react2 = babelHelpers.interopRequireDefault(_react);
 
-var _textField = require('./text-field');
-
-var PropTypes = _react2.default.PropTypes;
+var _textfieldHelpers = require('./_textfieldHelpers');
 
 /**
  * Input constructor
  * @class
  */
+var Input = (0, _textfieldHelpers.textfieldWrapper)(function (props) {
+  var inputRef = props.inputRef,
+      rest = babelHelpers.objectWithoutProperties(props, ['inputRef']);
 
-var Input = function (_React$Component) {
-  babelHelpers.inherits(Input, _React$Component);
+  return _react2.default.createElement('input', babelHelpers.extends({ ref: inputRef }, rest));
+});
 
-  function Input() {
-    babelHelpers.classCallCheck(this, Input);
-    return babelHelpers.possibleConstructorReturn(this, (Input.__proto__ || Object.getPrototypeOf(Input)).apply(this, arguments));
-  }
-
-  babelHelpers.createClass(Input, [{
-    key: 'render',
-    value: function render() {
-      return _react2.default.createElement(_textField.TextField, this.props);
-    }
-  }]);
-  return Input;
-}(_react2.default.Component);
-
-Input.propTypes = {
-  type: PropTypes.oneOf(['text', 'email', 'url', 'tel', 'password'])
-};
-Input.defaultProps = {
-  type: 'text'
-};
+/** Module API */
 exports.default = Input;
 module.exports = exports['default'];

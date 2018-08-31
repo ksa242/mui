@@ -12,18 +12,11 @@ import { controlledMessage } from './_helpers';
 import { getReactProps } from './_helpers';
 
 
-const PropTypes = React.PropTypes;
-
-
 /**
  * Checkbox constructor
  * @class
  */
 class Checkbox extends React.Component {
-  static propTypes = {
-    label: PropTypes.string
-  };
-
   static defaultProps = {
     className: '',
     label: null
@@ -41,7 +34,7 @@ class Checkbox extends React.Component {
       >
         <label>
           <input
-            ref="inputEl"
+            ref={el => { this.controlEl = el; }}
             type="checkbox"
             autoFocus={autoFocus}
             checked={checked}

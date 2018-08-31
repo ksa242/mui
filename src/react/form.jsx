@@ -13,10 +13,6 @@ import React from 'react';
  * @class
  */
 class Form extends React.Component {
-  static propTypes = {
-    inline: React.PropTypes.bool
-  };
-
   static defaultProps = {
     className: '',
     inline: false
@@ -24,10 +20,10 @@ class Form extends React.Component {
 
   render() {
     const { children, className, inline, ...reactProps } = this.props;
-    let cls = '';
+    let cls = 'mui-form';
 
     // inline form
-    if (inline) cls = 'mui-form--inline';
+    if (inline) cls += ' mui-form--inline';
 
     return (
       <form

@@ -3,18 +3,6 @@
  */
 
 // ============================================================================
-// NODE-INSERTED
-// ============================================================================
-
-@keyframes mui-node-inserted {
-  from { opacity: 0.99; }
-  to { opacity: 1; }
-}
-
-
-
-
-// ============================================================================
 // ANIMATION
 // ============================================================================
 
@@ -43,7 +31,7 @@
   display: inline-block;
   width: 0;
   height: 0;
-  margin-left: 2px;
+  margin-left: mui-rem(2px);
   vertical-align: middle;
   border-top:   $mui-caret-width solid;
   border-right: $mui-caret-width solid transparent;
@@ -90,7 +78,7 @@
 .mui--text-black            { color: mui-color('black'); }
 .mui--text-white            { color: mui-color('white'); }
 .mui--text-danger           { color: $mui-text-danger; }
-
+.mui--text-placeholder      { color: $mui-input-placeholder-color; }
 
 
 
@@ -128,12 +116,12 @@
 .mui-list--inline {
   @include x-list-unstyled();
 
-  margin-left: -5px;
+  margin-left: mui-rem(-5px);
 
   > li {
     display: inline-block;
-    padding-left: 5px;
-    padding-right: 5px;
+    padding-left: mui-rem(5px);
+    padding-right: mui-rem(5px);
   }
 }
 
@@ -334,9 +322,13 @@
 
 
 // ============================================================================
-// SCROLL BLOCK
+// SCROLL LOCK
 // ============================================================================
 
-body.mui-body--scroll-lock {
-  overflow: hidden !important;
+.mui-scrlock--showbar-y {
+  overflow-y: scroll !important;
+}
+
+.mui-scrlock--showbar-x {
+  overflow-x: scroll !important;
 }

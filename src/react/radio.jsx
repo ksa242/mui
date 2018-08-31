@@ -8,24 +8,18 @@
 import React from 'react';
 
 
-const PropTypes = React.PropTypes;
-
-
 /**
  * Radio constructor
  * @class
  */
 class Radio extends React.Component {
-  static propTypes = {
-    label: PropTypes.string
-  };
-
   static defaultProps = {
     className: '',
     label: null
   };
 
   render() {
+
     const { children, className, label, autoFocus, checked, defaultChecked,
       defaultValue, disabled, form, name, required, value, onChange,
       ...reactProps } = this.props;
@@ -37,7 +31,7 @@ class Radio extends React.Component {
       >
         <label>
           <input
-            ref="inputEl"
+            ref={el => { this.controlEl = el; }}
             type="radio"
             autoFocus={autoFocus}
             checked={checked}

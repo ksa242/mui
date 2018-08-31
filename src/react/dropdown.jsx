@@ -15,8 +15,7 @@ import * as jqLite from '../js/lib/jqLite';
 import * as util from '../js/lib/util';
 
 
-const PropTypes = React.PropTypes,
-      dropdownClass = 'mui-dropdown',
+const dropdownClass = 'mui-dropdown',
       menuClass = 'mui-dropdown__menu',
       openClass = 'mui--is-open',
       rightClass = 'mui-dropdown__menu--right';
@@ -34,27 +33,12 @@ class Dropdown extends React.Component {
       opened: false,
       menuTop: 0
     }
-
     let cb = util.callback;
     this.selectCB = cb(this, 'select');
     this.onClickCB = cb(this, 'onClick');
     this.onOutsideClickCB = cb(this, 'onOutsideClick');
+    this.onKeyDownCB = cb(this, 'onKeyDown');
   }
-
-  static propTypes = {
-    color: PropTypes.oneOf(['default', 'primary', 'danger', 'dark',
-      'accent']),
-    variant: PropTypes.oneOf(['default', 'flat', 'raised', 'fab']),
-    size: PropTypes.oneOf(['default', 'small', 'large']),
-    label: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.element
-    ]),
-    alignMenu: PropTypes.oneOf(['left', 'right']),
-    onClick: PropTypes.func,
-    onSelect: PropTypes.func,
-    disabled: PropTypes.bool
-  };
 
   static defaultProps = {
     className: '',
@@ -68,12 +52,22 @@ class Dropdown extends React.Component {
     disabled: false
   };
 
-  componentDidMount() {
-    document.addEventListener('click', this.onOutsideClickCB);
+  componentWillUpdate(nextProps, nextState) {
+    let doc = document;
+
+    if (!this.state.opened && nextState.opened) {
+      doc.addEventListener('click', this.onOutsideClickCB);
+      doc.addEventListener('keydown', this.onKeyDownCB);
+    } else if (this.state.opened && !nextState.opened) {
+      doc.removeEventListener('click', this.onOutsideClickCB);
+      doc.removeEventListener('keydown', this.onKeyDownCB);
+    }
   }
 
   componentWillUnmount() {
-    document.removeEventListener('click', this.onOutsideClickCB);
+    let doc = document;
+    doc.removeEventListener('click', this.onOutsideClickCB);
+    doc.removeEventListener('keydown', this.onKeyDownCB);
   }
 
   onClick(ev) {
@@ -87,8 +81,8 @@ class Dropdown extends React.Component {
       this.toggle();
 
       // execute <Dropdown> onClick method
-      let onClickFn = this.props.onClick;
-      onClickFn && onClickFn(ev);
+      let fn = this.props.onClick;
+      fn && fn(ev);
     }
   }
 
@@ -104,10 +98,10 @@ class Dropdown extends React.Component {
 
   open() {
     // position menu element below toggle button
-    let wrapperRect = this.refs.wrapperEl.getBoundingClientRect(),
-        toggleRect;
+    let wrapperRect = this.wrapperElRef.getBoundingClientRect(),
+      toggleRect;
 
-    toggleRect = this.refs.button.refs.buttonEl.getBoundingClientRect();
+    toggleRect = this.buttonElRef.buttonElRef.getBoundingClientRect();
 
     this.setState({
       opened: true,
@@ -116,7 +110,7 @@ class Dropdown extends React.Component {
   }
 
   close() {
-    this.setState({opened: false});
+    this.setState({ opened: false });
   }
 
   select(ev) {
@@ -130,8 +124,14 @@ class Dropdown extends React.Component {
   }
 
   onOutsideClick(ev) {
-    let isClickInside = this.refs.wrapperEl.contains(ev.target);
+    let isClickInside = this.wrapperElRef.contains(ev.target);
     if (!isClickInside) this.close();
+  }
+
+  onKeyDown(ev) {
+    // close menu on escape key
+    let key = ev.key;
+    if (key === 'Escape' || key === 'Esc') this.close();
   }
 
   render() {
@@ -151,7 +151,7 @@ class Dropdown extends React.Component {
 
     buttonEl = (
       <Button
-        ref="button"
+        ref={el => { this.buttonElRef = el }}
         type="button"
         onClick={this.onClickCB}
         color={color}
@@ -173,9 +173,9 @@ class Dropdown extends React.Component {
 
       menuEl = (
         <ul
-          ref="menuEl"
+          ref={el => { this.menuElRef = el }}
           className={cs}
-          style={{top: this.state.menuTop}}
+          style={{ top: this.state.menuTop }}
           onClick={this.selectCB}
         >
           {children}
@@ -188,7 +188,7 @@ class Dropdown extends React.Component {
     return (
       <div
         { ...reactProps }
-        ref="wrapperEl"
+        ref={el => { this.wrapperElRef = el }}
         className={dropdownClass + ' ' + className}
       >
         {buttonEl}

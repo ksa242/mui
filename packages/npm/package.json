@@ -1,6 +1,6 @@
 {
   "name": "muicss",
-  "version": "0.8.1",
+  "version": "0.9.40",
   "license": "MIT",
   "description": "Lightweight CSS framework based on Google's Material Design guidelines",
   "keywords": [
@@ -22,7 +22,9 @@
   },
   "devDependencies": {},
   "peerDependencies": {
-    "react": "^0.14.0 || ^15.0.0"
+    "react": "^0.14.0 || ^15.0.0 || ^16.0.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "react-addons-shallow-compare": "^15.6.2"
+  }
 }

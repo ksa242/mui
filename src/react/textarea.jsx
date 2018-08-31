@@ -7,25 +7,21 @@
 
 import React from 'react';
 
-import { TextField } from './text-field';
-
-
-const PropTypes = React.PropTypes;
+import { textfieldWrapper } from './_textfieldHelpers';
 
 
 /**
  * Textarea constructor
  * @class
  */
-class Textarea extends React.Component {
-  static defaultProps = {
-    type: 'textarea'
-  };
+const Textarea = textfieldWrapper(props => {
+  const { inputRef, ...rest } = props;
 
-  render() {
-    return <TextField { ...this.props } />;
-  }
-}
+  // default number of rows
+  if (!'rows' in rest) rest.rows = 2;
+
+  return <textarea ref={inputRef} {...rest} />;
+});
 
 
 export default Textarea;

@@ -1,5 +1,263 @@
 # MUI Changelog
 
+## 0.9.40 - August 24, 2018
+
+* [CSS] Added autofill support to floating labels 
+
+## 0.9.39 - April 27, 2018
+
+* Release of 0.9.39-rc1
+
+## 0.9.39-rc1 - April 3, 2018
+
+* [CSS] Reverted dimentions to use 'px' by default
+* [CSS] Added pre-compiled 'rem' version to extras
+* [REACT] Fixed issue preventing use of duplicate values in select options
+* [REACT] Added support for placeholder to Select component
+* [ANGULAR] Added support for placeholder to mui-select component
+
+## 0.9.38 - March 16, 2018
+
+* Added `$mui-use-rem` SASS option to choose 'px' or 'rem'
+* Added pre-compiled px-only version of MUI CSS to extras
+* Fixed double underline issue with `<abbr>` tag caused by latest version of
+  Normalize CSS
+
+## 0.9.37 - March 15, 2018
+
+* Switched to using 'rem' instead of 'px' for most CSS dimensions
+
+## 0.9.36 - February 2, 2018
+
+* Added support for `disabled` attribute to React Select component
+
+## 0.9.35 - December 17, 2017
+
+* Added close-on-escape support to Dropdown components in MUI CSS/JS, React and
+  Angular libraries.
+
+## 0.9.34 - December 16, 2017
+
+* Added `input` event trigger to CSS/JS Select component
+
+## 0.9.33 - December 15, 2017
+
+* Set bubbles=true for `change` event on CSS/JS Select component
+
+## 0.9.32 - December 14, 2017
+
+* Fixed typo in `tabIndex` attribute used in MUI React Input, Textarea and
+  Select component
+
+## 0.9.31 - December 9, 2017
+
+* Fixed tab-focus issue affecting Input, Textarea and Select components with
+  labels in Firefox 57 (https://github.com/muicss/mui/issues/252)
+* Added support for automatic scroll after keypress events in Select component
+  menu (https://github.com/muicss/mui/issues/203)
+
+## 0.9.30 - November 20, 2017
+
+* Re-implemented MUI React textfield components using HOC pattern
+  (fixes https://github.com/muicss/mui/issues/246)
+
+## 0.9.29 - November 16, 2017
+
+* Fixed scroll lock issue in Firefox Quantum
+* Added support for use-default to CSS/JS Select component
+
+## 0.9.28 - October 27, 2017
+
+* Added support for Select menu row height SASS variable
+* Upgraded devDependencies
+
+## 0.9.27 - September 28, 2017
+
+* Fixed issue with MUI React Col component in React 16
+* Switched to console.warn for MUI React warnings instead of console.error
+
+## 0.9.26 - September 21, 2017
+
+* Fixed bug in React Input component triggered by using `preact`
+* Added configuration options for Select component CSS
+
+## 0.9.25 - September 7, 2017
+
+* Added MUI Email SCSS files to `muicss` NPM package
+* Upgraded devDependencies
+
+## 0.9.24 - August 29, 2017
+
+* Fixed bug VanillaJS Select component preventing first item from being
+  selected when no other items are checked
+  (https://github.com/muicss/mui/issues/228)
+
+## 0.9.23 - August 27, 2017
+
+* Added `controlEl` attribute reference to inner control elements in React
+  Checkbox/Input/Radio/Select/Textarea components
+
+## 0.9.22 - August 20, 2017
+
+* Improvements and bugfixes to MUI Angular Input component
+* Switched from string 'refs' in MUI React to methods
+* Upgraded devDependencies
+
+## 0.9.21 - August 7, 2017
+
+* Fixed `mui-form--inline` styling issue (https://github.com/muicss/mui/issues/223)
+* Added `box-sizing: border-box` to Select component menu wrapper to fix sizing
+  issue
+
+## 0.9.20 - July 21, 2017
+
+* Removed http-server from npm dependencies
+
+## 0.9.19 - July 21, 2017
+
+* Improved smoothness of MUI React Button ripple effect (https://github.com/muicss/mui/issues/217)
+
+## 0.9.18 - July 13, 2017
+
+* Added ng-checked support to MUI Angular Checkbox and Radio components
+
+## 0.9.17 - June 14, 2017
+
+* Upgraded devDependencies
+* Upgraded to React 15.6.0
+
+## 0.9.16 - April 26, 2017
+
+* Added support for `required` property to MUI React Select component
+
+## 0.9.15 - April 10, 2017
+
+* Upgraded to React 15.5.0
+
+## 0.9.14 - April, 8 2017
+
+* Fixed issue with CSS/JS DOM insertion CSS causing animation flash on disabled
+  elements
+* Added top/left borders to dropdown component menu on IE
+* Deferred creation of ripple effect container element to mousedown event in
+  CSS/JS library
+
+## 0.9.13 - April, 3 2017
+
+* Fixed issue in Chrome where textfield floating labels were ignoring autofill events in CSS/JS library
+
+## 0.9.12 - March 18, 2017
+
+* Added support for jump-to alphabetical matches to CSS/JS, Angular and React
+  Select components
+
+## 0.9.11 - March 17, 2017
+
+* Fixed CSS animation trigger bug in IE Edge
+
+## 0.9.10 - March 11, 2017
+
+* Upgraded devDependencies
+* Updated React TextField component to allow object or string labels
+
+## 0.9.9 - February 15, 2017
+
+* Bumped version number
+
+## 0.9.9-rc2 - January 22, 2017
+
+* Added more fine-grained CSS state classes to input and textfield controls
+  * `.mui--is-untouched` - Control instance has not lost focus
+  * `.mui--is-touched` - Control instance has lost focus
+  * `.mui--is-pristine` - User has not interacted with control instance
+  * `.mui--is-dirty` - User has interacted with control instance
+  * `.mui--is-empty` - Control instance is empty
+  * `.mui--is-not-empty` - Control instance is not empty
+* Skipping replacement of `untouched`/`touched` CSS states on window blur event
+* Removed hard coded anchor tag :hover color
+
+## 0.9.9-rc1 - January 16, 2017
+
+* Minimized global CSS footprint (mui.css)
+  * Includes Normalize.css
+  * Sets font styles for `<html>`, `<body>` tags
+  * Sets style for naked `<a>` tags
+  * Sets style for `<p>`, `<ul>`, `<ol>`, `<strong>`, `<abbr>`, `<hr>`, `<h1>`,
+    `<h2>`, etc.
+  * No longer sets `box-sizing: border-box` CSS property globally
+  * No longer modifies styles for `<figure>`, `<img>`, `<legend>`,
+    `<input type="search">`, `<input type="file">`, `<input type="radio">`,
+    `<input type="checkbox">`
+* Added version without globals (mui-noglobals.css)
+  * No global CSS properties
+* Bugfix for IE Edge box shadows
+* Added `mui-form` class to scope `<legend>` and `<fieldset>` tags
+
+## 0.9.8 - January 12, 2017
+
+* Reverted to body method for scroll lock
+* Fixed bug causing issues with validation of required input fields when MUI
+  JS is loaded asynchronously
+
+## 0.9.7 - December 20, 2016
+
+* Fixed static/dynamic content bug in React Tabs component
+* Added support for controlled tabs in React Tabs component
+* Changed `initialSelectedIndex` to `defaultSelectedIndex` in React Tabs
+  component
+
+## 0.9.6 - December 3, 2016
+
+* Fixed bug in React Select component that added `name` property to outer
+  `<div>` element wrather than inner `<select>` element
+* Improved ripple code, fixed bug in opera
+* Made CSS/JS Select component more robust against memory leaks
+
+## 0.9.5 - November 26, 2016
+
+* Added '!default` modifier to value of $mui-base-font-smoothing in SASS
+* Implemented MDL ripple technique to fix animation flash issue
+  https://github.com/muicss/mui/issues/169
+* Decreased box-shadow effect when button is activated
+
+## 0.9.4 - November 9, 2016
+
+* Fixed issue with single tab elements in React Tabs component
+* Improved handling of MUI animationstart callbacks - using useCapture to
+  capture event and calling ev.stopImmediatePropagation() to prevent other
+  listeners from firing
+* Fixed bug preventing ripple effect on dynamically added dropdown button
+  elements in CSS/JS library
+* Removed flicker on animationstart helpers css load
+* upgraded devDependencies
+
+## 0.9.3 - October 21, 2016
+
+* Fixed styling issue in CSS/JS Dropdown component when using non-INPUT/BUTTON
+  toggle elements
+
+## 0.9.2 - October 20, 2016
+
+* Fixed issue with reference to `document` in React Select component causing
+  problems with server-side rendering
+* Added missing `xl` breakpoint to Angular library
+* Introduced use of documentFragment in CSS/JS Select component to improve
+  performance
+* Upgraded Normalize.css to 5.0.0
+
+## 0.9.1 - October 6, 2016
+
+* Moved node-inserted CSS classes to JavaScript library
+* Fixed issue with integer 0 values in React Input/Textarea components
+* Added support for visible scroll bars to overlay method
+
+## 0.9.0 - October 2, 2016
+
+* Refactored CSS/JS, React, Angular Select components
+* Using more robust, wrapper-based method for wrapping built-in `<select>` elements
+* Fixed bug in jqLite.one() method preventing detaching method with useCapture
+* Added minified files to packages/cdn/extra
+
 ## 0.8.1 - September 20, 2016
 
 * Added support for disabled options to MUI CSS/JS Select component

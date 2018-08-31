@@ -33,8 +33,7 @@ var _util = require('../js/lib/util');
 var util = babelHelpers.interopRequireWildcard(_util);
 
 
-var PropTypes = _react2.default.PropTypes,
-    dropdownClass = 'mui-dropdown',
+var dropdownClass = 'mui-dropdown',
     menuClass = 'mui-dropdown__menu',
     openClass = 'mui--is-open',
     rightClass = 'mui-dropdown__menu--right';
@@ -56,23 +55,33 @@ var Dropdown = function (_React$Component) {
       opened: false,
       menuTop: 0
     };
-
     var cb = util.callback;
     _this.selectCB = cb(_this, 'select');
     _this.onClickCB = cb(_this, 'onClick');
     _this.onOutsideClickCB = cb(_this, 'onOutsideClick');
+    _this.onKeyDownCB = cb(_this, 'onKeyDown');
     return _this;
   }
 
   babelHelpers.createClass(Dropdown, [{
-    key: 'componentDidMount',
-    value: function componentDidMount() {
-      document.addEventListener('click', this.onOutsideClickCB);
+    key: 'componentWillUpdate',
+    value: function componentWillUpdate(nextProps, nextState) {
+      var doc = document;
+
+      if (!this.state.opened && nextState.opened) {
+        doc.addEventListener('click', this.onOutsideClickCB);
+        doc.addEventListener('keydown', this.onKeyDownCB);
+      } else if (this.state.opened && !nextState.opened) {
+        doc.removeEventListener('click', this.onOutsideClickCB);
+        doc.removeEventListener('keydown', this.onKeyDownCB);
+      }
     }
   }, {
     key: 'componentWillUnmount',
     value: function componentWillUnmount() {
-      document.removeEventListener('click', this.onOutsideClickCB);
+      var doc = document;
+      doc.removeEventListener('click', this.onOutsideClickCB);
+      doc.removeEventListener('keydown', this.onKeyDownCB);
     }
   }, {
     key: 'onClick',
@@ -87,8 +96,8 @@ var Dropdown = function (_React$Component) {
         this.toggle();
 
         // execute <Dropdown> onClick method
-        var onClickFn = this.props.onClick;
-        onClickFn && onClickFn(ev);
+        var fn = this.props.onClick;
+        fn && fn(ev);
       }
     }
   }, {
@@ -105,10 +114,10 @@ var Dropdown = function (_React$Component) {
     key: 'open',
     value: function open() {
       // position menu element below toggle button
-      var wrapperRect = this.refs.wrapperEl.getBoundingClientRect(),
+      var wrapperRect = this.wrapperElRef.getBoundingClientRect(),
           toggleRect = void 0;
 
-      toggleRect = this.refs.button.refs.buttonEl.getBoundingClientRect();
+      toggleRect = this.buttonElRef.buttonElRef.getBoundingClientRect();
 
       this.setState({
         opened: true,
@@ -134,28 +143,37 @@ var Dropdown = function (_React$Component) {
   }, {
     key: 'onOutsideClick',
     value: function onOutsideClick(ev) {
-      var isClickInside = this.refs.wrapperEl.contains(ev.target);
+      var isClickInside = this.wrapperElRef.contains(ev.target);
       if (!isClickInside) this.close();
+    }
+  }, {
+    key: 'onKeyDown',
+    value: function onKeyDown(ev) {
+      // close menu on escape key
+      var key = ev.key;
+      if (key === 'Escape' || key === 'Esc') this.close();
     }
   }, {
     key: 'render',
     value: function render() {
+      var _this2 = this;
+
       var buttonEl = void 0,
           menuEl = void 0,
           labelEl = void 0;
 
-      var _props = this.props;
-      var children = _props.children;
-      var className = _props.className;
-      var color = _props.color;
-      var variant = _props.variant;
-      var size = _props.size;
-      var label = _props.label;
-      var alignMenu = _props.alignMenu;
-      var onClick = _props.onClick;
-      var onSelect = _props.onSelect;
-      var disabled = _props.disabled;
-      var reactProps = babelHelpers.objectWithoutProperties(_props, ['children', 'className', 'color', 'variant', 'size', 'label', 'alignMenu', 'onClick', 'onSelect', 'disabled']);
+      var _props = this.props,
+          children = _props.children,
+          className = _props.className,
+          color = _props.color,
+          variant = _props.variant,
+          size = _props.size,
+          label = _props.label,
+          alignMenu = _props.alignMenu,
+          onClick = _props.onClick,
+          onSelect = _props.onSelect,
+          disabled = _props.disabled,
+          reactProps = babelHelpers.objectWithoutProperties(_props, ['children', 'className', 'color', 'variant', 'size', 'label', 'alignMenu', 'onClick', 'onSelect', 'disabled']);
 
       // build label
 
@@ -174,7 +192,9 @@ var Dropdown = function (_React$Component) {
       buttonEl = _react2.default.createElement(
         _button2.default,
         {
-          ref: 'button',
+          ref: function ref(el) {
+            _this2.buttonElRef = el;
+          },
           type: 'button',
           onClick: this.onClickCB,
           color: color,
@@ -196,7 +216,9 @@ var Dropdown = function (_React$Component) {
         menuEl = _react2.default.createElement(
           'ul',
           {
-            ref: 'menuEl',
+            ref: function ref(el) {
+              _this2.menuElRef = el;
+            },
             className: cs,
             style: { top: this.state.menuTop },
             onClick: this.selectCB
@@ -210,7 +232,9 @@ var Dropdown = function (_React$Component) {
       return _react2.default.createElement(
         'div',
         babelHelpers.extends({}, reactProps, {
-          ref: 'wrapperEl',
+          ref: function ref(el) {
+            _this2.wrapperElRef = el;
+          },
           className: dropdownClass + ' ' + className
         }),
         buttonEl,
@@ -224,16 +248,6 @@ var Dropdown = function (_React$Component) {
 /** Define module API */
 
 
-Dropdown.propTypes = {
-  color: PropTypes.oneOf(['default', 'primary', 'danger', 'dark', 'accent']),
-  variant: PropTypes.oneOf(['default', 'flat', 'raised', 'fab']),
-  size: PropTypes.oneOf(['default', 'small', 'large']),
-  label: PropTypes.oneOfType([PropTypes.string, PropTypes.element]),
-  alignMenu: PropTypes.oneOf(['left', 'right']),
-  onClick: PropTypes.func,
-  onSelect: PropTypes.func,
-  disabled: PropTypes.bool
-};
 Dropdown.defaultProps = {
   className: '',
   color: 'default',

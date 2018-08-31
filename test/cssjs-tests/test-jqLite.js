@@ -175,6 +175,22 @@ describe('js/lib/jqLite.js', function() {
     });
 
 
+    it('should only trigger once with useCapture', function() {
+      var t = 0,
+          fn = function() {t += 1;};
+      
+      jqLite.one(el, 'click', fn, true);
+
+      // trigger once
+      el.dispatchEvent(event('click'));
+      assert.equal(t, 1);
+
+      // trigger again
+      el.dispatchEvent(event('click'));
+      assert.equal(t, 1);
+    });
+
+
     it('should only trigger once per event', function() {
       var events = [],
           fn;
