@@ -11,3 +11,4 @@ examples/email-inlined
 *.sublime-*
 .idea/
 package-lock.json
+/packages/
